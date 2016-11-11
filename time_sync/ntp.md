@@ -38,3 +38,6 @@ remote           refid      st t when poll reach   delay   offset  jitter
 ntpd            0:off   1:off   2:on    3:on    4:on    5:on    6:off
 ```
 こんな感じになってればちゃんと設定されている．
+
+参考：
+http://qiita.com/megu_ma/items/bb902740ee7de9ddd102
