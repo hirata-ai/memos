@@ -9,3 +9,4 @@
 * [sshで利用する鍵を作成する](ssh-keygen.md)
 * [ユーザー追加とパスワード変更](useradd.md)
 * [FTPサーバを立てる](vsftp.md)
+* [時刻同期する(centos5 or cenos6)](time_sync/ntp.md)
