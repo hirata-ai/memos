@@ -1,5 +1,5 @@
 # 時刻同期する(cenos6より前のバージョン)
-NTPで時刻同期をする(centos7以降だと`Chrony`というものになってるらしい)  
+NTP で時刻同期をする(centos7以降だと`Chrony`というものになってるらしい)  
 * とりあえずntpをインストール  
 `(sudo) yum -y install ntp`  
 * ntpdを起動  
@@ -11,10 +11,11 @@ NTPで時刻同期をする(centos7以降だと`Chrony`というものになっ�
 -server 1.centos.pool.ntp.org iburst
 -server 2.centos.pool.ntp.org iburst
 -server 3.centos.pool.ntp.org iburst
-+server ntp.nict.jp
-+server ntp.jst.mfeed.ad.jp
++server ntp.nict.jp iburst
++server ntp.jst.mfeed.ad.jp iburst
 ```
 NICTがNTPサーバを提供してるらしい．他にはプロバイダのNTPサーバとか指定するらしい．
+ちなみにpool.ntp.org のままでも大丈夫だが，国外に繋がるかもなのでnict のサーバに繋ぐのが無難だと思う．
 
 * 設定変えたら設定ファイルを再読み込み  
 `service ntpd reload`
