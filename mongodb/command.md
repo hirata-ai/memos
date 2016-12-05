@@ -13,3 +13,5 @@
 `db.[コレクション名].find()`
 * ソートする場合は後ろに`.sort({sort_key:1})` を付ける(逆順なら-1)  
 `db.[コレクション名].find().sort({sort_key:1})`
+* find した結果の集計をするときは末尾に`.count()`を付けるだけ  
+`db.[コレクション名].find().sort({sort_key:1}).count()`
