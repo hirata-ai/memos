@@ -7,7 +7,7 @@ Mon May 22 06:41:33 UTC 2017
 * タイムゾーンの設定は`/etc/localtime` で設定してある．  
 * 変更する場合は，`/usr/share/zoneinfo` 以下にある，自分の設定したいタイムゾーンのファイルを`/etc/localtime` にコピーすることで設定できる．
 ```
-[vagrant@localhost ~]$ cp /usr/share/zoneinfo/Japan /etc/local
-[vagrant@localhost ~]$ date
+$ cp /usr/share/zoneinfo/Japan /etc/localtime
+$ date
 Mon May 22 15:46:03 JST 2017
 ```
