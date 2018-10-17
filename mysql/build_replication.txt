@@ -1,0 +1,93 @@
+mysql master・slave構築手順
+（master・slave両方）
+・mysqlをインストール・起動する
+# yum install http://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+# yum install mysql mysql-devel mysql-server mysql-utilities
+# systemctl start mysqld
+（rootパスワードを確認）
+# cat /var/log/mysqld.log | grep password | grep root
+# mysql_secure_installation
+
+New password:
+Re-enter new password:
+Change the password for root ? ((Press y|Y for Yes, any other key for No) : No
+Remove anonymous users? (Press y|Y for Yes, any other key for No) :Yes
+Disallow root login remotely? (Press y|Y for Yes, any other key for No) : Yes
+Remove test database and access to it? (Press y|Y for Yes, any other key for No) :Yes
+Reload privilege tables now? (Press y|Y for Yes, any other key for No) :Yes
+
+（master作業）
+・my.cnfを編集
+# cp -p /etc/my.cnf /etc/my.cnf_$(date '+%Y%m%d')
+# vim /etc/my.cnf
+下記を追記
+```
+log-bin=mysql-bin
+server-id=101
+```
+# systemctl restart mysqld
+
+・（お試しなどでデータがなければ）適当にデータを投入する
+# wget https://github.com/datacharmer/test_db/archive/master.zip
+# yum install -y unzip
+# unzip master.zip
+# mysql -u root -p < employees_partitioned.sql
+# mysql -u test_user -p -t < test_employees_md5.sql
+
+・レプリケーション用のユーザーを作成する
+mysql> CREATE USER 'repl'@'%' identified by '（パスワード）';
+
+・作成したユーザーにレプリケーションの権限を付与する
+mysql> GRANT REPLICATION SLAVE ON *.* TO 'repl'@'%';
+mysql> flush privileges;
+
+・masterのデータをダンプする
+# mysqldump -u root -p xxxxx > backup.sql
+
+・scpなどでダンプデータを転送
+# scp backup.sql vagrant@xxx.xxx.xx.xxx:/home/vagrant/
+
+・レプリケーションのポジションを確認
+mysql> show master status;
++----------------------+----------+--------------+------------------+-------------------+
+| File                 | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++----------------------+----------+--------------+------------------+-------------------+
+| mysql-bin-log.000001 |     2149 |              |                  |                   |
++----------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+
+（slave作業）
+・my.cnfを編集
+# cp -p /etc/my.cnf /etc/my.cnf_$(date '+%Y%m%d')
+# vim /etc/my.cnf
+下記を追記（slave側にはbinlogは必要ない。server-idはmasterと被らないようにする）
+```
+server-id=102
+read_only
+```
+# systemctl restart mysqld
+
+・masterのダンプデータをリストアする（この辺はbashからでもなんでもよい）
+# mysql -u root -p
+mysql> create database xxxxx;
+mysql> use xxxxx;
+mysql> source ~/backup.sql
+
+・slaveの設定をする
+mysql> change master to
+    -> master_host='xxx.xxx.xx.xx',
+    -> master_user='repl',
+    -> master_password='password',
+    -> master_log_file='mysql-bin-log.000001',
+    -> master_log_pos=2149;
+Query OK, 0 rows affected, 2 warnings (0.03 sec)
+
+mysql> change replication filter replicate_do_db = (xxxxx);
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> start slave;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> show slave status\G
+でslaveの状態を確認できる。"Slave_IO_Running"と"Slave_SQL_Running"が両方Yesになっていれば大丈夫。
+エラーが出ていれば下の方（たぶん"Slave_SQL_Running_State"のところ）にエラー詳細が出ているはず
